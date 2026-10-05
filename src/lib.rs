@@ -54,7 +54,16 @@ use std::ops::{Deref, DerefMut};
 use std::os::raw::{c_int, c_ulong, c_void};
 use std::ptr;
 
-enum Class { }
+// Vaime patch (vaime.1): uninhabited `enum Class {}` made the extern static
+// `_NSConcreteStackBlock` a future-incompat lint ("static of uninhabited
+// type", rust-lang/rust#74840, hard error in a future Rust). A zero-sized
+// inhabited struct keeps the same usage (`isa: *const Class` from
+// `&_NSConcreteStackBlock`) and symbol linkage; remove this fork once
+// upstream/gpui-pre migrates (see vaime-dapp Cargo.toml [patch.crates-io]).
+#[repr(C)]
+struct Class {
+    _private: [u8; 0],
+}
 
 #[cfg_attr(any(target_os = "macos", target_os = "ios"),
            link(name = "System", kind = "dylib"))]
